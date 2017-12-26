@@ -1,6 +1,6 @@
-# Guard::Shell
+# Guard::Sclang
 
-This little guard allows you to run shell commands when files are altered.
+This little guard allows you to run sclang commands when files are altered.
 
 
 ## Install
@@ -9,25 +9,25 @@ Make sure you have [guard](http://github.com/guard/guard) installed.
 
 Install the gem with:
 
-    gem install guard-shell
+    gem install guard-sclang
 
 Or add it to your Gemfile:
 
-    gem 'guard-shell'
+    gem 'guard-sclang'
 
 And then add a basic setup to your Guardfile:
 
-    guard init shell
+    guard init sclang
 
 
 ## Usage
 
-If you can do something in your shell, or in ruby, you can do it when a file changes
-with guard-shell. It simply executes the block passed to watch if a change is 
+If you can do something in your sclang, or in ruby, you can do it when a file changes
+with guard-sclang. It simply executes the block passed to watch if a change is 
 detected, and if anything is returned from the block it will be printed. For example
 
 ``` ruby
-guard :shell do
+guard :sclang do
   watch /.*/ do |m|
     m[0] + " has changed."
   end
@@ -39,7 +39,7 @@ This admittedly isn't a very useful example, but you hopefully get the idea. To 
 everything on start pass `:all_on_start` to `#guard`,
 
 ``` ruby
-guard :shell, :all_on_start => true do
+guard :sclang, :all_on_start => true do
   # ...
 end
 ```
@@ -47,7 +47,7 @@ end
 There is also a shortcut for easily creating notifications,
 
 ``` ruby
-guard :shell do
+guard :sclang do
   watch /.*/ do |m|
     n m[0], 'File Changed'
   end
@@ -65,7 +65,7 @@ that can be specified `:success`, `:pending` and `:failed`.
 #### Saying the Name of the File You Changed and Displaying a Notification
 
 ``` ruby
-guard :shell do
+guard :sclang do
   watch /(.*)/ do |m|
     n m[0], 'Changed'
     `say -v cello #{m[0]}`
@@ -76,9 +76,9 @@ end
 #### Rebuilding LaTeX
 
 ``` ruby
-guard :shell, :all_on_start => true do
+guard :sclang, :all_on_start => true do
   watch /^([^\/]*)\.tex/ do |m|
-    `pdflatex -shell-escape #{m[0]}`
+    `pdflatex -sclang-escape #{m[0]}`
     `rm #{m[1]}.log`
 
     count = `texcount -inc -nc -1 #{m[0]}`.split('+').first
@@ -92,7 +92,7 @@ end
 #### Check Syntax of a Ruby File
 
 ``` ruby
-guard :shell do
+guard :sclang do
   watch /.*\.rb$/ do |m|
     if system("ruby -c #{m[0]}")
       n "#{m[0]} is correct", 'Ruby Syntax', :success

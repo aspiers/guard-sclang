@@ -1,8 +1,8 @@
 require 'guard/compat/plugin'
-require 'guard/shell/version'
+require 'guard/sclang/version'
 
 module Guard
-  class Shell < Plugin
+  class Sclang < Plugin
 
     # Calls #run_all if the :all_on_start option is present.
     def start

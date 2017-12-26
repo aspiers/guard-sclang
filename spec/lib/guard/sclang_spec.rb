@@ -1,7 +1,7 @@
 require "guard/compat/test/helper"
-require "guard/shell"
+require "guard/sclang"
 
-RSpec.describe Guard::Shell do
+RSpec.describe Guard::Sclang do
   describe "#start" do
     it "works" do
       subject.start
