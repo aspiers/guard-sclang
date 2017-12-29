@@ -57,6 +57,7 @@ module Guard
     end
 
     def run_sclang(paths)
+      paths = paths.uniq
       cmd, title = _get_cmd_and_title(paths)
 
       outerr = ''
