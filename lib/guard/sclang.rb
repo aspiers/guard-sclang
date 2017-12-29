@@ -1,3 +1,4 @@
+require 'open3'
 require 'pathname'
 
 require 'guard/compat/plugin'
@@ -5,6 +6,11 @@ require 'guard/sclang/version'
 
 module Guard
   class Sclang < Plugin
+    def initialize
+      super
+      options[:args] ||= []
+      options[:timeout] ||= 3
+    end
 
     # Calls #run_all if the :all_on_start option is present.
     def start
@@ -40,7 +46,7 @@ module Guard
       here = Pathname.new(__FILE__).dirname
       runner = here.parent.parent + "unit-test-cli.scd"
       tester = ["sclang"] + options[:args] + [runner.to_s]
-      cmd = ["timeout", "3"] + tester
+      cmd = ["timeout", options[:timeout].to_s] + tester
       if paths
         cmd += paths
         title = paths.join " "
@@ -57,14 +63,14 @@ module Guard
       print Compat::UI.color("=" * (ENV["COLUMNS"] || "72").to_i, :blue)
       print Compat::UI.color("Running: " + cmd.join(" ") + "\n", :blue)
 
-      got_status, exit_status = _run_cmd(cmd)
+      got_status, exit_status = _run_cmd(cmd, title)
 
       unless got_status
         _handle_missing_status(exit_status)
       end
     end
 
-    def _run_cmd(cmd)
+    def _run_cmd(cmd, title)
       got_status = false
       exit_status = nil
 
