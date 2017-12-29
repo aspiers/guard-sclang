@@ -1,13 +1,22 @@
+require "open3"
+
 require "guard/compat/test/helper"
 require "guard/sclang"
 
 RSpec.describe Guard::Sclang do
-  def expect_color_calls(paths)
+  def expect_color_calls(paths, timeout=3)
     expect(Guard::Compat::UI).to receive(:color).with(/=============+/, :blue)
     expect(Guard::Compat::UI).to receive(:color).with(
       %r{Running: timeout \d+ sclang .* #{paths}},
       :blue
     )
+
+    status = double(Process::Status)
+    expect(status).to receive(:value).and_return(7)
+    expect(::Open3).to receive(:popen2e).with(
+      "timeout", timeout.to_s, "sclang", %r{.*/unit-test-cli\.scd$}, paths
+    ).and_yield("stdin", ["blahout"], status)
+
     allow(Guard::Compat::UI).to receive(:color)
   end
 
