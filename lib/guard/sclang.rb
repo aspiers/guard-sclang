@@ -6,7 +6,7 @@ require 'guard/sclang/version'
 
 module Guard
   class Sclang < Plugin
-    def initialize
+    def initialize(options={})
       super
       options[:args] ||= []
       options[:timeout] ||= 3
@@ -105,12 +105,17 @@ module Guard
 
               print Compat::UI.color(line, *colors)
             end
+
+            # stdouterr should always raise Errno::EIO when EOF is reached.
+            # If this doesn't happen, probably the test suite is running.
+            raise Errno::EIO
           rescue Errno::EIO => e
+            # Ran out of output to read
             exit_status = $?
           end
         end
       rescue PTY::ChildExited => e
-        $stdout.puts "The child process exited!"
+        $stdout.puts "The child process exited! #{e}"
         exit_status = e.status.exitstatus
       end
 
@@ -136,7 +141,7 @@ module Guard
     end
 
     def _handle_missing_status(exit_status, title)
-      msg = "Pid %d exited with status %d" % [exit_status.pid, exit_status]
+      msg = "Pid %d exited with status %d" % [exit_status.pid, exit_status.exitstatus]
       status = exit_status == 0 ? :success : :failed
       Compat::UI.notify(msg, title: title, image: status)
       level = status == :success ? :warning : :error

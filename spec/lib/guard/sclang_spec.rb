@@ -4,19 +4,28 @@ require "guard/compat/test/helper"
 require "guard/sclang"
 
 RSpec.describe Guard::Sclang do
-  def expect_color_calls(paths, timeout=3)
-    expect(Guard::Compat::UI).to receive(:color).with(/=============+/, :blue)
-    expect(Guard::Compat::UI).to receive(:color).with(
-      %r{Running: timeout \d+ sclang .* #{paths}},
-      :blue
-    )
+  def dedent(text)
+    text.gsub(/^\s+/, '')
+  end
 
-    status = double(Process::Status)
-    expect(status).to receive(:value).and_return(7)
-    expect(::Open3).to receive(:popen2e).with(
+  def expect_colored_text(text, color)
+    expect(Guard::Compat::UI).to receive(:color).with(text, color)
+  end
+
+  def expect_output(paths, test_output, passes, fails, timeout=3)
+    expect_colored_text(/=============+/, :blue)
+    expect_colored_text(%r{Running: timeout \d+ sclang .* #{paths}}, :blue)
+
+    fake_summary = "Finished running test(s): #{passes} passes, #{fails} failures\n"
+    fake_output = StringIO.new(test_output + "\n" + fake_summary)
+    fake_output.rewind
+    expect(PTY).to receive(:spawn).with(
       "timeout", timeout.to_s, "sclang", %r{.*/unit-test-cli\.scd$}, paths
-    ).and_yield("stdin", ["blahout"], status)
-
+    ) { |command, *args, &block|
+      `exit #{fails}`
+      block.call(fake_output, "fake stdin", $?.pid)
+    }
+    expect_colored_text(fake_summary, fails == 0 ? :green : :red)
     allow(Guard::Compat::UI).to receive(:color)
   end
 
@@ -41,20 +50,45 @@ RSpec.describe Guard::Sclang do
     end
 
     it "delegates to run_on_modifications" do
-      expect_color_calls("bar")
+      expect_output("bar", dedent(<<-EOF), 5, 1)
+        PASS: test passed
+        FAIL: test failed
+        EOF
       expect(Guard::Compat::UI).to receive(:notify).with(
-        "0 passes, 1 failures",
+        "5 passes, 1 failures",
         { title: "bar", image: :failed }
       )
-      #expect($stdout).to receive(:puts).with("0 passes, 1 failures")
       subject.run_all
     end
   end
 
   describe "#run_on_modifications" do
-    it "outputs to the screen" do
-      expect_color_calls("baz")
+    it "handles zero failures" do
+      expect_output("baz", dedent(<<-EOF), 4, 0)
+        PASS: test passed
+        FAIL: test failed
+        EOF
+      expect_colored_text("PASS: test passed\n", :green)
+      expect_colored_text("FAIL: test failed\n", :red)
+      expect(Guard::Compat::UI).to receive(:notify).with(
+        "4 passes, 0 failures",
+        { title: "baz", image: :success }
+      )
       subject.run_on_modifications(%w(baz))
+    end
+
+    it "handles failures", focus: true do
+      expect_output("qux", dedent(<<-EOF), 3, 2)
+        PASS: test passed
+        FAIL: test failed
+        EOF
+      expect_colored_text("PASS: test passed\n", :green)
+      expect_colored_text("FAIL: test failed\n", :red)
+      expect(Guard::Compat::UI).to receive(:notify).with(
+        "3 passes, 2 failures",
+        { title: "qux", image: :failed }
+      )
+      subject.run_on_modifications(%w(qux))
     end
   end
 end
