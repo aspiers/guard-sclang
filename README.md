@@ -1,21 +1,23 @@
 # Guard::Sclang
 
-This little guard allows you to run sclang commands when files are altered.
+This [Guard](http://guardgem.org/) plugin allows you to run SuperCollider [`UnitTest` test
+suites](http://doc.sccode.org/Classes/UnitTest.html) commands when
+files are added or altered.
 
 
 ## Install
 
-Make sure you have [guard](http://github.com/guard/guard) installed.
+Make sure you have [Guard](http://guardgem.org/) installed.
 
 Install the gem with:
 
     gem install guard-sclang
 
-Or add it to your Gemfile:
+Or add it to your `Gemfile`:
 
     gem 'guard-sclang'
 
-And then add a basic setup to your Guardfile:
+And then add a basic setup to your `Guardfile`:
 
     guard init sclang
 
@@ -23,44 +25,45 @@ And then add a basic setup to your Guardfile:
 ## Usage
 
 When one or more files matching a `watch` block's regular expression
-changes, guard-sclang simply executes the SuperCollider file(s)
-returned by that block
+changes, guard-sclang simply runs the UnitTest subclass returned by
+that block:
 
 ``` ruby
 guard :sclang do
-  watch /.*/ do |m|
-    m[0] + " has changed."
+  # Run any tests which are added or changed under lib/tests/
+  watch(%r{lib/tests/\w.*\.sc})
+
+  # For any class Foo added or changed under lib/classes/, run
+  # the corresponding test class TestFoo
+  watch(%r{lib/classes/(\w.*)\.sc}) do |m|
+    classname = "Test#{m[1]}"
+    puts "#{m[0]} changed; running #{classname}"
+    classname
   end
 end
 ```
 
-will simply print a message telling you a file has been changed when
-it is changed.  This admittedly isn't a very useful example, but you
-hopefully get the idea. To run everything on start pass
-`:all_on_start` to `#guard`,
+You can optionally provide arguments to be passed to `sclang`, e.g.
 
 ``` ruby
-guard :sclang, :all_on_start => true do
+# Load the ScQT IDE classes
+guard :sclang, args: ["-i", "scqt"] do
+  ...
+end
+```
+
+To run everything on start pass `:all_on_start` to `#guard`,
+
+``` ruby
+guard :sclang, all_on_start: true do
   # ...
 end
 ```
 
-There is also a shortcut for easily creating notifications,
 
-``` ruby
-guard :sclang do
-  watch /.*/ do |m|
-    n m[0], 'File Changed'
-  end
-end
-```
+## History and license
 
-`#n` takes up to three arguments; the first is the body of the message, here the path
-of the changed file; the second is the title for the notification; and the third is
-the image to use. There are three (four counting `nil` the default) different images
-that can be specified `:success`, `:pending` and `:failed`.
-
-
-### Examples
-
-fixme
+This plugin was based on
+[`guard-shell`](https://github.com/guard/guard-shell) by Joshua
+Hawxwell, so the original license has been preserved - see
+[LICENSE](LICENSE).

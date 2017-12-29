@@ -1,6 +1,12 @@
-# Add files and commands to this file, like the example:
-#   watch(%r{file/path}) { `command(s)` }
-#
 guard :sclang do
-  watch(/(.*).txt/) {|m| `tail #{m[0]}` }
+  # Run any tests which are added or changed under lib/tests/
+  watch(%r{lib/tests/\w.*\.sc})
+
+  # For any class Foo added or changed under lib/classes/, run
+  # the corresponding test class TestFoo
+  watch(%r{lib/classes/(\w.*)\.sc}) do |m|
+    classname = "Test#{m[1]}"
+    puts "#{m[0]} changed; running #{classname}"
+    classname
+  end
 end
