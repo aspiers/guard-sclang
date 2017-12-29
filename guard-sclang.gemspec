@@ -22,6 +22,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rspec', '~> 3.1'
   s.add_development_dependency 'guard-rspec', '~> 4.7'
 
-  s.files        = %w(README.md LICENSE)
+  s.files        = %w(README.md CONTRIBUTING.md LICENSE unit-test-cli.scd)
   s.files       += Dir["{lib}/**/*"]
 end
