@@ -66,7 +66,7 @@ module Guard
       got_status, exit_status = _run_cmd(cmd, title)
 
       unless got_status
-        _handle_missing_status(exit_status)
+        _handle_missing_status(exit_status, title)
       end
     end
 
@@ -123,7 +123,7 @@ module Guard
       [status, msg, line]
     end
 
-    def _handle_missing_status(exit_status)
+    def _handle_missing_status(exit_status, title)
       msg = "Pid %d exited with status %d" % [exit_status.pid, exit_status]
       status = exit_status == 0 ? :success : :failed
       Compat::UI.notify(msg, title: title, image: status)
