@@ -43,6 +43,8 @@ guard :sclang do
 end
 ```
 
+### `sclang` CLI arguments
+
 You can optionally provide arguments to be passed to `sclang`, e.g.
 
 ``` ruby
@@ -52,11 +54,30 @@ guard :sclang, args: ["-i", "scqt"] do
 end
 ```
 
-To run everything on start pass `:all_on_start` to `#guard`,
+### `sclang` execution timeout
+
+If `sclang` experiences a compilation error, it will hang, so
+invocation of `sclang` is currently wrapped by
+[`timeout(1)`](https://linux.die.net/man/1/timeout).  (This
+currently prevents `guard-sclang` from working outside Linux,
+but it should not be hard to convert the timeout mechanism to native
+Ruby to fix that.)
+
+The timeout defaults to 3 seconds, but can be changed:
+
+``` ruby
+guard :sclang, timeout: 10 do
+  ...
+end
+```
+
+### Other options
+
+To run everything on start pass `:all_on_start` to `#guard`:
 
 ``` ruby
 guard :sclang, all_on_start: true do
-  # ...
+  ...
 end
 ```
 
