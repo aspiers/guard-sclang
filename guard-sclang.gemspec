@@ -16,7 +16,7 @@ Gem::Specification.new do |s|
     modified.
   DESC
 
-  s.add_dependency 'guard', '>= 2.0.0'
+  s.add_dependency 'guard', '~> 2.0', '>= 2.0.0'
   s.add_dependency 'guard-compat', '~> 1.0'
 
   s.files        = %w(README.md LICENSE)
