@@ -1,5 +1,5 @@
-require 'open3'
 require 'pathname'
+require 'pty'
 
 require 'guard/compat/plugin'
 require 'guard/sclang/version'
@@ -71,35 +71,46 @@ module Guard
     end
 
     def _run_cmd(cmd, title)
+      command, *args = *cmd
+
       got_status = false
       exit_status = nil
 
-      Open3.popen2e(*cmd) do |stdin, stdouterr, wait_thr|
-        stdouterr.each do |line|
-          #Compat::UI.info(line)
-          colors =
-            if line =~ /^PASS:/
-              [:green]
-            elsif line =~ /^FAIL:/
-              [:red]
-            elsif line =~ /^ERROR:/
-              [:bright, :red]
-            elsif line =~ /^WARNING:/
-              [:yellow]
-            else
-              []
+      # Using PTY instead of Open3.popen2e should work around
+      # https://github.com/supercollider/supercollider/issues/3366
+      begin
+        PTY.spawn command, *args do |stdouterr, stdin, pid|
+          begin
+            stdouterr.each do |line|
+              #Compat::UI.info(line)
+              colors =
+                if line =~ /^PASS:/
+                  [:green]
+                elsif line =~ /^FAIL:/
+                  [:red]
+                elsif line =~ /^ERROR:/
+                  [:bright, :red]
+                elsif line =~ /^WARNING:/
+                  [:yellow]
+                else
+                  []
+                end
+
+              status, msg, line = _check_line_for_status(line)
+              if status
+                got_status = true
+                Compat::UI.notify(msg, title: title, image: status)
+              end
+
+              print Compat::UI.color(line, *colors)
             end
-
-          status, msg, line = _check_line_for_status(line)
-          if status
-            got_status = true
-            Compat::UI.notify(msg, title: title, image: status)
+          rescue Errno::EIO => e
+            exit_status = $?
           end
-
-          print Compat::UI.color(line, *colors)
         end
-
-        exit_status = wait_thr.value
+      rescue PTY::ChildExited => e
+        $stdout.puts "The child process exited!"
+        exit_status = e.status.exitstatus
       end
 
       [got_status, exit_status]
@@ -130,33 +141,6 @@ module Guard
       level = status == :success ? :warning : :error
       Compat::UI.send(level, msg)
       Compat::UI.warning("Didn't find test results in output")
-    end
-  end
-
-  class Dsl
-    # Easy method to display a notification
-    def n(msg, title='', image=nil)
-      Compat::UI.notify(msg, :title => title, :image => image)
-    end
-
-    # Eager prints the result for stdout and stderr as it would be written when
-    # running the command from the terminal. This is useful for long running
-    # tasks.
-    def eager(command)
-      require 'pty'
-
-      begin
-        PTY.spawn command do |r, w, pid|
-          begin
-            $stdout.puts
-            r.each {|line| print line }
-          rescue Errno::EIO
-            # the process has finished
-          end
-        end
-      rescue PTY::ChildExited
-        $stdout.puts "The child process exited!"
-      end
     end
   end
 end
