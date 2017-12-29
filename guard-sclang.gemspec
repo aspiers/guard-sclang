@@ -18,6 +18,9 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'guard', '~> 2.0', '>= 2.0.0'
   s.add_dependency 'guard-compat', '~> 1.0'
+  s.add_development_dependency 'rake', '~> 12.3'
+  s.add_development_dependency 'rspec', '~> 3.1'
+  s.add_development_dependency 'guard-rspec', '~> 4.7'
 
   s.files        = %w(README.md LICENSE)
   s.files       += Dir["{lib}/**/*"]
