@@ -1,0 +1,33 @@
+language: ruby
+sudo: false
+rvm:
+  - 2.2.8
+  - 2.3.5
+  - 2.4.2
+  - 2.5.0
+  - jruby-9.1.13.0
+#  - rbx-2
+
+matrix:
+  allow_failures:
+    - rvm: rbx-2
+env:
+  global:
+#    - JRUBY_OPTS="--debug"
+
+before_install:
+  # https://github.com/travis-ci/travis-ci/issues/8978
+  - gem update --system
+  - gem update bundler
+
+script:
+  - bundle exec rake
+#  - bundle exec codeclimate-test-reporter
+
+#bundler_args: --without development
+
+cache: bundler
+
+#addons:
+#  code_climate:
+#    repo_token: ...
