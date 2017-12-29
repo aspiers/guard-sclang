@@ -1,11 +1,13 @@
-# Guard::Sclang
+Guard::Sclang
+=============
 
 This [Guard](http://guardgem.org/) plugin allows you to run SuperCollider [`UnitTest` test
 suites](http://doc.sccode.org/Classes/UnitTest.html) commands when
 files are added or altered.
 
 
-## Install
+Install
+-------
 
 Make sure you have [Guard](http://guardgem.org/) installed.
 
@@ -22,7 +24,8 @@ And then add a basic setup to your `Guardfile`:
     guard init sclang
 
 
-## Usage
+Usage
+-----
 
 When one or more files matching a `watch` block's regular expression
 changes, guard-sclang simply runs the UnitTest subclass returned by
@@ -82,7 +85,14 @@ end
 ```
 
 
-## History and license
+Development / support / feedback
+--------------------------------
+
+Please see [the CONTRIBUTING file](CONTRIBUTING.md).
+
+
+History and license
+-------------------
 
 This plugin was based on
 [`guard-shell`](https://github.com/guard/guard-shell) by Joshua
