@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/aspiers/guard-sclang.svg?branch=master)](https://travis-ci.org/aspiers/guard-sclang)
+
 Guard::Sclang
 =============
 
