@@ -8,8 +8,8 @@ suites](http://doc.sccode.org/Classes/UnitTest.html) commands when
 files are added or altered.
 
 
-Install
--------
+Installation
+------------
 
 Make sure you have [Guard](http://guardgem.org/) installed.
 
@@ -17,17 +17,25 @@ Install the gem with:
 
     gem install guard-sclang
 
-Or add it to your `Gemfile`:
+Or, better, add it to your `Gemfile`, and then use
+[Bundler](http://bundler.io/) to install it:
 
-    gem 'guard-sclang'
-
-And then add a basic setup to your `Guardfile`:
-
-    guard init sclang
+    echo "gem 'guard-sclang'" >> Gemfile
+    bundle install
 
 
-Usage
------
+Configuring a `Guardfile`
+---------------------------
+
+Before you can launch Guard, you need to configure a `Guardfile` which
+tells Guard which of your SuperCollider tests to run via the
+`guard-sclang` plugin.
+
+You can create a stub `Guardfile` from a built-in template via:
+
+    bundle exec guard init sclang
+
+The rest of this section explains how to configure the `Guardfile`.
 
 When one or more files matching a `watch` block's regular expression
 changes, guard-sclang simply runs the UnitTest subclass returned by
@@ -85,6 +93,30 @@ guard :sclang, all_on_start: true do
   ...
 end
 ```
+
+
+Usage
+-----
+
+Once you have set up your `Guardfile` with the `guard-sclang` plugin
+enabled, you are ready to launch Guard.
+
+`guard-sclang` assumes that the `sclang` interpreter is to be found
+somewhere on your `$PATH`.  If you installed SuperCollider on Linux
+via a distribution package, this should happen automatically, in which
+case you can simply launch Guard by typing this into your shell:
+
+    bundle exec guard
+
+However if you installed from source, or you are using MacOS, maybe
+`sclang` won't be on the `$PATH`, in which case you will need to set
+it.  This can either be done temporarily for each invocation of Guard,
+e.g.
+
+    PATH=/path/to/dir/containing/sclang:$PATH bundle exec guard
+
+or by configuring your interactive shell setup (e.g. `~/.bashrc`) to
+set `$PATH` on startup.
 
 
 Development / support / feedback
