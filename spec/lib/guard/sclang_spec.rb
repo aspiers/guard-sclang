@@ -77,7 +77,7 @@ RSpec.describe Guard::Sclang do
       subject.run_on_modifications(%w(baz))
     end
 
-    it "handles failures", focus: true do
+    it "handles failures" do
       expect_output("qux", dedent(<<-EOF), 3, 2)
         PASS: test passed
         FAIL: test failed
