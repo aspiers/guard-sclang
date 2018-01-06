@@ -3,9 +3,11 @@
 Guard::Sclang
 =============
 
-This [Guard](http://guardgem.org/) plugin allows you to run SuperCollider [`UnitTest` test
-suites](http://doc.sccode.org/Classes/UnitTest.html) commands when
-files are added or altered.
+This [Guard](http://guardgem.org/) plugin allows you to run
+SuperCollider [`UnitTest` test
+suites](http://doc.sccode.org/Classes/UnitTest.html) automatically
+when files are added or altered, so that you can immediately see the
+impact of code changes on your tests.
 
 
 Installation
