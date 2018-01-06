@@ -44,7 +44,7 @@ t = Task.new {
 	} {
 		thisProcess.argv.do { |name|
 			if (name.contains("/")) {
-				name = name.basename.removeExtension;
+				name = PathName(name.basename).fileNameWithoutExtension;
 			};
 			if (name.contains(":")) {
 				UnitTest.runTest(name);
