@@ -87,7 +87,7 @@ module Guard
               colors =
                 if line =~ /^PASS:/
                   [:green]
-                elsif line =~ /^FAIL:/
+                elsif line =~ /^FAIL:|^There were failures/
                   [:red]
                 elsif line =~ /^ERROR:/
                   [:bright, :red]
