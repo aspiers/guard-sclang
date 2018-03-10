@@ -31,6 +31,14 @@ RSpec.describe Guard::Sclang do
     allow(Guard::Compat::UI).to receive(:color)
   end
 
+  def expect_run(paths, test_output, passes, fails, expected_success, **extra)
+    expect_output(paths, test_output, passes, fails, **extra)
+    expect(Guard::Compat::UI).to receive(:notify).with(
+      "#{passes} passes, #{fails} failures",
+      { title: paths, image: expected_success ? :success : :failed }
+    )
+  end
+
   describe "#start" do
     it "works" do
       subject.start
@@ -52,32 +60,24 @@ RSpec.describe Guard::Sclang do
     end
 
     def test_success
-      expect_output("bar", dedent(<<-EOF), 5, 0)
+      expect_run("bar", dedent(<<-EOF), 5, 0, true)
         PASS: test passed
         EOF
-      expect(Guard::Compat::UI).to receive(:notify).with(
-        "5 passes, 0 failures",
-        { title: "bar", image: :success }
-      )
-      success = subject.run_all
-      expect(success).to be == true
+      got_success = subject.run_all
+      expect(got_success).to be == true
+    end
+
+    def test_failure
+      expect_run("bar", dedent(<<-EOF), 5, 1, false)
+        PASS: test passed
+        FAIL: test failed
+        EOF
+      got_success = subject.run_all
+      expect(got_success).to be == false
     end
 
     it "handles success" do
       test_success
-    end
-
-    def test_failure
-      expect_output("bar", dedent(<<-EOF), 5, 1)
-        PASS: test passed
-        FAIL: test failed
-        EOF
-      expect(Guard::Compat::UI).to receive(:notify).with(
-        "5 passes, 1 failures",
-        { title: "bar", image: :failed }
-      )
-      success = subject.run_all
-      expect(success).to be == false
     end
 
     it "handles a failure" do
@@ -93,46 +93,30 @@ RSpec.describe Guard::Sclang do
 
   describe "#run_on_modifications" do
     it "handles zero failures" do
-      expect_output("baz", dedent(<<-EOF), 4, 0)
+      expect_run("baz", dedent(<<-EOF), 4, 0, true)
         PASS: test passed
-        FAIL: test failed
         EOF
       expect_colored_text("PASS: test passed\n", :green)
-      expect_colored_text("FAIL: test failed\n", :red)
-      expect(Guard::Compat::UI).to receive(:notify).with(
-        "4 passes, 0 failures",
-        { title: "baz", image: :success }
-      )
       success = subject.run_on_modifications(%w(baz))
       expect(success).to be == true
     end
 
     it "handles zero failures but non-zero exit code" do
-      expect_output("baz", dedent(<<-EOF), 4, 0, exitcode: 1)
+      expect_run("baz", dedent(<<-EOF), 4, 0, exitcode: 1)
         PASS: test passed
-        FAIL: test failed
         EOF
       expect_colored_text("PASS: test passed\n", :green)
-      expect_colored_text("FAIL: test failed\n", :red)
-      expect(Guard::Compat::UI).to receive(:notify).with(
-        "4 passes, 0 failures",
-        { title: "baz", image: :success }
-      )
       success = subject.run_on_modifications(%w(baz))
       expect(success).to be == true
     end
 
     it "handles failures" do
-      expect_output("qux", dedent(<<-EOF), 3, 2)
+      expect_run("qux", dedent(<<-EOF), 3, 2, false)
         PASS: test passed
         FAIL: test failed
         EOF
       expect_colored_text("PASS: test passed\n", :green)
       expect_colored_text("FAIL: test failed\n", :red)
-      expect(Guard::Compat::UI).to receive(:notify).with(
-        "3 passes, 2 failures",
-        { title: "qux", image: :failed }
-      )
       success = subject.run_on_modifications(%w(qux))
       expect(success).to be == false
     end
