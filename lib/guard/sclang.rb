@@ -77,6 +77,7 @@ module Guard
 
       outerr = ''
       print Compat::UI.color("=" * (ENV["COLUMNS"] || "72").to_i, :blue)
+      print Compat::UI.color("Paths changed: " + paths.join(" ") + "\n", :blue)
       print Compat::UI.color("Running: " + cmd.join(" ") + "\n", :blue)
 
       run_status, exit_status = _run_cmd(cmd, title)
