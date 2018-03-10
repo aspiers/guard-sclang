@@ -118,9 +118,18 @@ module Guard
                   []
                 end
 
-              run_status, msg, line = _check_line_for_status(line)
-              if run_status
-                Compat::UI.notify(msg, title: title, image: run_status)
+              line_status, msg, line = _check_line_for_status(line)
+              if line_status
+                # Allow for multiple summary lines just in case, e.g.
+                # some with no failures and others with failures.
+                # Hopefully this won't happen though.
+                if line_status == :success
+                  run_status ||= line_status
+                else
+                  run_status = line_status
+                end
+
+                Compat::UI.notify(msg, title: title, image: line_status)
               end
 
               print Compat::UI.color(line, *colors)

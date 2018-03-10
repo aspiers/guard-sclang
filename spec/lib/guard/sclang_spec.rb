@@ -17,7 +17,9 @@ RSpec.describe Guard::Sclang do
     expect_colored_text(%r{Running: timeout \d+ sclang .* #{paths}}, :blue)
 
     fake_summary = "Finished running test(s): #{passes} passes, #{fails} failures\n"
-    fake_output = StringIO.new(test_output + "\n" + fake_summary)
+    # Don't assume the summary is the last line of the output
+    fake_footer = "cleaning up OSC\n"
+    fake_output = StringIO.new(test_output + "\n" + fake_summary + fake_footer)
     fake_output.rewind
     expect(PTY).to receive(:spawn).with(
       "timeout", timeout.to_s, "sclang", %r{.*/unit-test-cli\.scd$}, paths
