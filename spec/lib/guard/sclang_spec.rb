@@ -12,7 +12,7 @@ RSpec.describe Guard::Sclang do
     expect(Guard::Compat::UI).to receive(:color).with(text, color)
   end
 
-  def expect_output(paths, test_output, passes, fails, timeout=3)
+  def expect_output(paths, test_output, passes, fails, timeout: 3, exitcode: nil)
     expect_colored_text(/=============+/, :blue)
     expect_colored_text(%r{Running: timeout \d+ sclang .* #{paths}}, :blue)
 
@@ -22,7 +22,7 @@ RSpec.describe Guard::Sclang do
     expect(PTY).to receive(:spawn).with(
       "timeout", timeout.to_s, "sclang", %r{.*/unit-test-cli\.scd$}, paths
     ) { |command, *args, &block|
-      `exit #{fails}`
+      `exit #{exitcode || fails}`
       block.call(fake_output, "fake stdin", $?.pid)
     }
     expect_colored_text(fake_summary, fails == 0 ? :green : :red)
@@ -58,7 +58,8 @@ RSpec.describe Guard::Sclang do
         "5 passes, 1 failures",
         { title: "bar", image: :failed }
       )
-      subject.run_all
+      success = subject.run_all
+      expect(success).to be == false
     end
   end
 
@@ -74,7 +75,23 @@ RSpec.describe Guard::Sclang do
         "4 passes, 0 failures",
         { title: "baz", image: :success }
       )
-      subject.run_on_modifications(%w(baz))
+      success = subject.run_on_modifications(%w(baz))
+      expect(success).to be == true
+    end
+
+    it "handles zero failures but non-zero exit code" do
+      expect_output("baz", dedent(<<-EOF), 4, 0, exitcode: 1)
+        PASS: test passed
+        FAIL: test failed
+        EOF
+      expect_colored_text("PASS: test passed\n", :green)
+      expect_colored_text("FAIL: test failed\n", :red)
+      expect(Guard::Compat::UI).to receive(:notify).with(
+        "4 passes, 0 failures",
+        { title: "baz", image: :success }
+      )
+      success = subject.run_on_modifications(%w(baz))
+      expect(success).to be == true
     end
 
     it "handles failures" do
@@ -88,7 +105,8 @@ RSpec.describe Guard::Sclang do
         "3 passes, 2 failures",
         { title: "qux", image: :failed }
       )
-      subject.run_on_modifications(%w(qux))
+      success = subject.run_on_modifications(%w(qux))
+      expect(success).to be == false
     end
   end
 end
