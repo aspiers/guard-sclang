@@ -6,10 +6,13 @@ require 'guard/sclang/version'
 
 module Guard
   class Sclang < Plugin
+    attr_accessor :last_failed
+
     def initialize(options={})
       super
       options[:args] ||= []
       options[:timeout] ||= 3
+      @last_failed  = false
     end
 
     # Calls #run_all if the :all_on_start option is present.
@@ -21,10 +24,13 @@ module Guard
     def stop
     end
 
-    # Call #run_on_change for all files which match this guard.
+    # Test for all files which match this guard.
     def run_all
-      all = Compat.matching_files(self, Dir.glob('{,**/}*.sc{,d}'))
-      run_on_modifications(all)
+      run_sclang
+    end
+
+    def all_paths
+      Compat.matching_files(self, Dir.glob('{,**/}*.sc{,d}'))
     end
 
     def run_on_additions(paths)
@@ -56,7 +62,16 @@ module Guard
       return [cmd, title]
     end
 
-    def run_sclang(paths)
+    def run_sclang(paths=nil)
+      success = run_sclang_once(paths || all_paths)
+      if paths && options[:all_after_pass] && success && last_failed
+        success = run_all
+      end
+      @last_failed = !success
+      return success
+    end
+
+    def run_sclang_once(paths)
       paths = paths.uniq
       cmd, title = _get_cmd_and_title(paths)
 

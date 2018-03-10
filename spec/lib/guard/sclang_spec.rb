@@ -51,7 +51,23 @@ RSpec.describe Guard::Sclang do
       ).and_return(%w(bar))
     end
 
-    it "delegates to run_on_modifications" do
+    def test_success
+      expect_output("bar", dedent(<<-EOF), 5, 0)
+        PASS: test passed
+        EOF
+      expect(Guard::Compat::UI).to receive(:notify).with(
+        "5 passes, 0 failures",
+        { title: "bar", image: :success }
+      )
+      success = subject.run_all
+      expect(success).to be == true
+    end
+
+    it "handles success" do
+      test_success
+    end
+
+    def test_failure
       expect_output("bar", dedent(<<-EOF), 5, 1)
         PASS: test passed
         FAIL: test failed
@@ -62,6 +78,16 @@ RSpec.describe Guard::Sclang do
       )
       success = subject.run_all
       expect(success).to be == false
+    end
+
+    it "handles a failure" do
+      test_failure
+    end
+
+    it "doesn't trigger all_after_pass" do
+      subject.options[:all_after_pass] = true
+      test_failure
+      test_success
     end
   end
 

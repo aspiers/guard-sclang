@@ -88,10 +88,19 @@ end
 
 ### Other options
 
-To run everything on start pass `:all_on_start` to `#guard`:
+To run everything on start, pass `:all_on_start` to `#guard`:
 
 ``` ruby
 guard :sclang, all_on_start: true do
+  ...
+end
+```
+
+To run everything after previously failing tests succeeded, pass
+`:all_after_pass` to `#guard`:
+
+``` ruby
+guard :sclang, all_after_pass: true do
   ...
 end
 ```
