@@ -6,10 +6,13 @@ require 'guard/sclang/version'
 
 module Guard
   class Sclang < Plugin
+    attr_accessor :last_failed
+
     def initialize(options={})
       super
       options[:args] ||= []
       options[:timeout] ||= 3
+      @last_failed  = false
     end
 
     # Calls #run_all if the :all_on_start option is present.
@@ -21,10 +24,13 @@ module Guard
     def stop
     end
 
-    # Call #run_on_change for all files which match this guard.
+    # Test for all files which match this guard.
     def run_all
-      all = Compat.matching_files(self, Dir.glob('{,**/}*.sc{,d}'))
-      run_on_modifications(all)
+      run_sclang
+    end
+
+    def all_paths
+      Compat.matching_files(self, Dir.glob('{,**/}*.sc{,d}'))
     end
 
     def run_on_additions(paths)
@@ -53,10 +59,19 @@ module Guard
       else
         title = tester.join " "
       end
-      [cmd, title]
+      return [cmd, title]
     end
 
-    def run_sclang(paths)
+    def run_sclang(paths=nil)
+      success = run_sclang_once(paths || all_paths)
+      if paths && options[:all_after_pass] && success && last_failed
+        success = run_all
+      end
+      @last_failed = !success
+      return success
+    end
+
+    def run_sclang_once(paths)
       paths = paths.uniq
       cmd, title = _get_cmd_and_title(paths)
 
@@ -64,17 +79,38 @@ module Guard
       print Compat::UI.color("=" * (ENV["COLUMNS"] || "72").to_i, :blue)
       print Compat::UI.color("Running: " + cmd.join(" ") + "\n", :blue)
 
-      got_status, exit_status = _run_cmd(cmd, title)
+      run_status, exit_status = _run_cmd(cmd, title)
 
-      unless got_status
+      if run_status
+        return run_status == :success
+      else
+        # Couldn't figure out the result from the output, so rely on
+        # the exit code instead.
         _handle_missing_status(exit_status, title)
+        return exit_status.success?
       end
     end
 
+    # Returns [run_status, exit_status] pair.
+    #
+    # Run the test runner, add colour for PASS/FAIL/ERROR/WARNING, and
+    # try to extract the final test result (100% pass / some failures
+    # / compilation error) from the runner output.  If the test result
+    # is successfully extracted from the output, the appropriate
+    # notification will be sent, and the run_status value returned
+    # will be :success or :failed.  However if something goes wrong
+    # then we won't be able to determine the result from the output,
+    # in which case at least we capture the exit status of the runner
+    # process, and success is determined based on this exit status.
+    #
+    # Note that due to quirks in SuperCollider which are not yet
+    # understood, it is possible for the exit code to be non-zero even
+    # when the test suite passes 100% and the test runner is
+    # apparently working as designed.
     def _run_cmd(cmd, title)
       command, *args = *cmd
 
-      got_status = false
+      run_status = nil
       exit_status = nil
 
       # Using PTY instead of Open3.popen2e should work around
@@ -97,10 +133,18 @@ module Guard
                   []
                 end
 
-              status, msg, line = _check_line_for_status(line)
-              if status
-                got_status = true
-                Compat::UI.notify(msg, title: title, image: status)
+              line_status, msg, line = _check_line_for_status(line)
+              if line_status
+                # Allow for multiple summary lines just in case, e.g.
+                # some with no failures and others with failures.
+                # Hopefully this won't happen though.
+                if line_status == :success
+                  run_status ||= line_status
+                else
+                  run_status = line_status
+                end
+
+                Compat::UI.notify(msg, title: title, image: line_status)
               end
 
               print Compat::UI.color(line, *colors)
@@ -112,6 +156,9 @@ module Guard
           rescue Errno::EIO => e
             # Ran out of output to read
             exit_status = $?
+            unless exit_status
+              Compat::UI.error("$? returned #{exit_status}")
+            end
           end
         end
       rescue PTY::ChildExited => e
@@ -119,7 +166,7 @@ module Guard
         exit_status = e.status.exitstatus
       end
 
-      [got_status, exit_status]
+      [run_status, exit_status]
     end
 
     def _check_line_for_status(line)
@@ -140,13 +187,16 @@ module Guard
       [status, msg, line]
     end
 
+    # Couldn't figure out the result from the output, so rely on
+    # the exit code instead.
     def _handle_missing_status(exit_status, title)
       msg = "Pid %d exited with status %d" % [exit_status.pid, exit_status.exitstatus]
-      status = exit_status == 0 ? :success : :failed
+      status = exit_status.success? ? :success : :failed
       Compat::UI.notify(msg, title: title, image: status)
       level = status == :success ? :warning : :error
       Compat::UI.send(level, msg)
       Compat::UI.warning("Didn't find test results in output")
+      exit_status.success?
     end
   end
 end

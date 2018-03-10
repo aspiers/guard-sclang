@@ -31,6 +31,7 @@ var excludes = [
 // Have to wrap this in a Task so that we can wait.
 t = Task.new {
 	UnitTest.reset;
+	UnitTest.reportPasses = \brief;
 	if (thisProcess.argv.isEmpty) {
 		UnitTest.allSubclasses.do { |testClass|
 			if (excludes.includes(testClass.asString).not) {
