@@ -85,10 +85,12 @@ module Guard
       if run_status
         return run_status == :success
       else
-        # Couldn't figure out the result from the output, so rely on
-        # the exit code instead.
+        # Couldn't figure out the result from the output.  Even if
+        # the exit code is 0, this could simply mean something went
+        # wrong in unit-test-cli.scd's handling of an error, so we
+        # assume the worst.
         _handle_missing_status(exit_status, title)
-        return exit_status.success?
+        return :failed
       end
     end
 
