@@ -19,3 +19,7 @@ please follow these
 [guidelines on contributing](http://blog.adamspiers.org/2012/11/10/7-principles-for-contributing-patches-to-software-projects/) so that you can help me to help you ;-)
 
 Thanks in advance!
+
+## Guide for maintainers
+
+See [`MAINTAINERS.md`](MAINTAINERS.md).
