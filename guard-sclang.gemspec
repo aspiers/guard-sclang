@@ -18,6 +18,11 @@ Gem::Specification.new do |s|
 
   s.add_dependency 'guard', '~> 2.0', '>= 2.0.0'
   s.add_dependency 'guard-compat', '~> 1.0'
+
+  # Make sure we have https://github.com/bundler/bundler/pull/4743
+  # included in our bundler, for signed release tags.
+  s.add_development_dependency 'bundler', '>= 1.13.0'
+
   s.add_development_dependency 'rake', '~> 12.3'
   s.add_development_dependency 'rspec', '~> 3.1'
   s.add_development_dependency 'guard-rspec', '~> 4.7'
