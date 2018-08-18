@@ -11,7 +11,7 @@ module Guard
     def initialize(options={})
       super
       options[:args] ||= []
-      options[:timeout] ||= 3
+      options[:timeout] ||= 5
       @last_failed  = false
     end
 
