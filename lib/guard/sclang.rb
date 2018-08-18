@@ -192,7 +192,11 @@ module Guard
     # Couldn't figure out the result from the output, so rely on
     # the exit code instead.
     def _handle_missing_status(exit_status, title)
-      msg = "Pid %d exited with status %d" % [exit_status.pid, exit_status.exitstatus]
+      if exit_status.exitstatus == 124
+        msg = "Pid %d timed out (status %d)" % [exit_status.pid, exit_status.exitstatus]
+      else
+        msg = "Pid %d exited with status %d" % [exit_status.pid, exit_status.exitstatus]
+      end
       status = exit_status.success? ? :success : :failed
       Compat::UI.notify(msg, title: title, image: status)
       level = status == :success ? :warning : :error
