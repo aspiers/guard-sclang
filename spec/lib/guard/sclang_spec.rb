@@ -12,7 +12,7 @@ RSpec.describe Guard::Sclang do
     expect(Guard::Compat::UI).to receive(:color).with(text, color)
   end
 
-  def expect_output(paths, test_output, passes, fails, timeout: 3, exitcode: nil)
+  def expect_output(paths, test_output, passes, fails, timeout: 5, exitcode: nil)
     expect_colored_text(/=============+/, :blue)
     expect_colored_text(%r{Running: timeout \d+ sclang .* #{paths}}, :blue)
 
