@@ -41,7 +41,6 @@ t = Task.new {
 				// doesn't look good:
 				0.1.wait;
 			};
-			UnitTest.report;
 		};
 	} {
 		thisProcess.argv.do { |name|
@@ -58,11 +57,12 @@ t = Task.new {
 					UnitTest.new.failed(nil, msg, true);
 				} {
 					"Invoking %.run".format(className).postln;
-					klass.run(reset: false);
+					klass.run(reset: false, report: false);
 				};
 			};
 		};
 	};
+	UnitTest.report;
 	"Finished running test(s): % passes, % failures\n".postf(
 		UnitTest.passes.size,
 		UnitTest.failures.size
