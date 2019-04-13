@@ -65,12 +65,15 @@ module Guard
     def run_sclang(paths=nil)
       success = run_sclang_once(paths || all_paths)
       if paths && options[:all_after_pass] && success && last_failed
+        puts "Subset of tests succeeded but last run failed; running all ..."
         success = run_all
       end
       @last_failed = !success
       return success
     end
 
+    # Returns a boolean representing the (potentially guessed) success
+    # of the the run.
     def run_sclang_once(paths)
       paths = paths.uniq
       cmd, title = _get_cmd_and_title(paths)
@@ -89,7 +92,7 @@ module Guard
         # wrong in unit-test-cli.scd's handling of an error, so we
         # assume the worst.
         _handle_missing_status(exit_status, title)
-        return :failed
+        return false
       end
     end
 
